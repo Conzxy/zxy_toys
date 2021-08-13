@@ -2,7 +2,6 @@
 #define _ZXY_STRING_BUILDER
 
 #include <string>
-#include <type_traits> // std::enable_if, std::is_same
 #include <utility> // std::move
 
 namespace zxy{
@@ -22,7 +21,9 @@ public:
 	using Self = BasicString;
 	
 	BasicString() = default;
-
+	
+	// copy and move compiler-defined
+	
 	BasicString(Rep const& rep)
 		: data_(std::move(rep))
 	{ }
@@ -31,23 +32,20 @@ public:
 		: data_(str)
 	{ }
 
-	template<typename S2, typename Rep2>
-	BasicString(BasicString<S2, Rep2> const& other)
+	template<typename Rep2>
+	BasicString(BasicString<S, Rep2> const& other)
 	{
 		build(other);
 	}
 
-	// convert to S(e.g. std::string) object
-	operator S() const noexcept
-	{ return data_; }
 	
-	template<typename S2, typename Rep2>
-	Self& operator=(BasicString<S2, Rep2> const& other)
+	template<typename Rep2>
+	Self& operator=(BasicString<S, Rep2> const& other)
 	{
 		build(other);
 		return *this;
 	}
-
+	
 	template<typename S2, typename Rep2>
 	void build(BasicString<S2, Rep2> const& other)
 	{
@@ -70,6 +68,9 @@ public:
 	Rep& rep() noexcept
 	{ return data_; }
 
+	// convert to S(e.g. std::string) object
+	operator S() const noexcept
+	{ return data_; }
 private:
 	Rep data_;
 };
@@ -101,6 +102,8 @@ public:
 template<typename T>
 struct Concat
 {
+	using type = void;
+
 	template<typename S>
 	static void  appendTo(T const&, S& )
 	{
@@ -135,18 +138,11 @@ template<
 	typename S,
 	typename L, 
 	typename R>
-//BasicString<S, BasicStringBuilder<S, BasicString<S, L>, BasicString<S, R>>>
-//operator+(BasicString<S, L> const& lhs, BasicString<S, R> const& rhs) noexcept
-//{ 
-	//return BasicStringBuilder<S, BasicString<S, L>, BasicString<S, R>>{ lhs, rhs }; 
-//}
-
 BasicString<S, BasicStringBuilder<S, L, R>>
 operator+(BasicString<S, L> const& lhs, BasicString<S, R> const& rhs) noexcept
 {
 	return BasicStringBuilder<S, L, R>{ lhs.rep(), rhs.rep() };
 }
-
 
 template class BasicString<std::string>;
 
