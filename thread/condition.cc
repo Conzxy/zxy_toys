@@ -24,8 +24,9 @@ bool Condition::waitForSeconds(double seconds){
 	const int64_t Nanoseconds2 = seconds*Nanoseconds;
 	spec.tv_sec += static_cast<time_t>((spec.tv_nsec+Nanoseconds2)/Nanoseconds);
 	spec.tv_nsec = static_cast<long>((spec.tv_nsec+Nanoseconds2)%Nanoseconds);
-	
-	return ETIMEDOUT == pthread_cond_timedwait(&cond_, &mutex_.pthreadMutex(), &spec);	
+
+	MutexLock::UnassignHolder holder(mutex_);
+	return ETIMEDOUT == pthread_cond_timedwait(&cond_, &mutex_.mutex(), &spec);	
 }
 
 }//namespace zxy

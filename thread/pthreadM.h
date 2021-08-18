@@ -7,30 +7,19 @@
 #ifndef _THREADM_H
 #define _THREADM_H
 
-#include <stdio.h>
-#include <assert.h>
-#include <string.h>
-#include <errno.h>
+#include "util/check.h"
 
-constexpr int gErrLine = 256;
+#ifndef PTHREAD_CHECK
 
-//pthread_attr_t 待补充
-#define TCHECK(ret)	\
-		({ __typeof__(ret) err = ret; \
-		   if(err != 0){\
-		       char buf[gErrLine];\
-			   snprintf(buf, gErrLine-1, "Error Message:%s\n", strerror(err));\
-			   fputs(buf, stdout);\
-		   }\
-		   assert(err == 0);	})
+#undef ASSERT
+#define ASSERT assert
 
-#define TCHECK2(ret, option) \
-		({ __typeof__(ret) err = ret; \
-		  if(err != 0 && err != option){\
-			char buf[gErrLine];	\
-			snprintf(buf, gErrLine - 1, "Error Message:%s\n", strerror(err)); \
-			fputs(buf, stdout);\
-			assert(err == 0);\
-		  }})
-		  
-#endif
+#endif // PTHREAD_CHECK
+
+#define TCHECK(ret) \
+	({ \
+		ASSERT(ret == 0); \
+	 })
+
+
+#endif // _PTHREADM_H

@@ -1,22 +1,17 @@
-/*
- * @version: 0.1 2021-5-24 
- * @author: Conzxy
- * simple wrapper of condition variable
- */
-
-#ifndef _CONDVARIABLE_H
-#define _CONDVARIABLE_H
+#ifndef _ZXY_CONDVARIABLE_H
+#define _ZXY_CONDVARIABLE_H
 
 #include <pthread.h>
 #include "pthreadM.h"
-#include <noncopyable.h>
+#include "../util/noncopyable.h"
 #include "mutexlock.h"
 
 namespace zxy{
 
-class Condition : public noncopyable {
+class Condition : noncopyable 
+{
 public:
-	Condition(MutexLock& mutex)
+	explicit Condition(MutexLock& mutex)
 		: mutex_{mutex}
 	{
 		TCHECK(pthread_cond_init(&cond_, NULL));
@@ -27,7 +22,8 @@ public:
 	}
 
 	void wait(){
-		TCHECK(pthread_cond_wait(&cond_, &mutex_.pthreadMutex()));
+		MutexLock::UnassignHolder holder(mutex_);
+		TCHECK(pthread_cond_wait(&cond_, &mutex_.mutex()));
 	}
 
 	bool waitForSeconds(double seconds);
@@ -46,4 +42,5 @@ private:
 };
 
 }//namespace zxy
-#endif
+
+#endif // _ZXY_CONDITION_H

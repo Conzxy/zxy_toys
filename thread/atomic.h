@@ -8,15 +8,17 @@
 #define _ATOMIC_H
 
 #include <type_traits>
-#include <noncopyable.h>
+#include "noncopyable.h"
 #include <stdint.h>
 
 namespace zxy{
 
 template<typename T>
-class Atomic : public noncopyable {
+class Atomic : public noncopyable
+{
 public:
-	static_assert(std::is_integral<T>::value, "Atomic type must be integral\n");
+	static_assert(std::is_integral<T>::value, 
+			"Atomic type must be integral\n");
 
 	Atomic()
 		: val_{0}
@@ -61,6 +63,9 @@ public:
 private:
 	volatile T val_;
 };
+
+template class Atomic<int32_t>;
+template class Atomic<int64_t>;
 
 using AtomicInt32 = Atomic<int32_t>;
 using AtomicInt64 = Atomic<int64_t>;

@@ -44,6 +44,7 @@ TEST(StringViewTest, starts_withTest){
 
 TEST(StringViewTest, ends_withTest){
 	EXPECT_EQ(true, "std::string"_sv.ends_with("string"));
+	EXPECT_EQ(true, "\n"_sv.ends_with("\n"));
 }
 
 TEST(StringViewTest, remove_prefixTest){

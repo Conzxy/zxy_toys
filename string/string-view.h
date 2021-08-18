@@ -140,6 +140,7 @@ public:
 	
 	size_type find(StringView v, size_type pos = 0) const noexcept
 	{
+		// FIXME intead of kmp or other efficient algorithm
 		char const* begin;
 		if(v.size() > len_ || 
 				!(begin = strstr(data_ + pos, v.data())))
@@ -268,8 +269,6 @@ private:
 public:
 	static constexpr size_type npos = -1;
 };
-
-constexpr StringView::size_type StringView::npos;
 
 inline void swap(StringView& lhs, StringView& rhs) noexcept(noexcept(lhs.swap(rhs)))
 { lhs.swap(rhs); }

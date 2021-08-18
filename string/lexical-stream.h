@@ -1,15 +1,14 @@
 #ifndef _ZXY_LEXICAL_STREAM_H
 #define _ZXY_LEXICAL_STREAM_H
 
-#include <pthread.h>
 #include <string.h>
 #include <string>
 #include <stdint.h>
 #include <type_traits>
 #include <algorithm>
 #include <assert.h>
-#include <iostream>
 #include <unistd.h>
+#include "string-view.h"
 #include "../util/noncopyable.h"
 
 namespace zxy{
@@ -18,7 +17,7 @@ namespace detail{
 /**
  * @class FixedBuffer
  * @tparam SZ size of buffer
- * store a fixed-size buffer
+ * maintain a fixed-size buffer
  */
 template<unsigned SZ>
 class FixedBuffer
@@ -47,6 +46,7 @@ public:
 		if(len < avali()) {
 			memcpy(cur(), str, len);
 			len_ += len;
+			*cur() = 0;
 		}
 	}
 	
@@ -107,6 +107,9 @@ public:
 	
 	unsigned size() const noexcept
 	{ return buffer_.len(); }
+	
+	unsigned maxsize() const noexcept
+	{ return SZ; }
 
 	Self& operator<<(bool);
 	Self& operator<<(char);
@@ -127,15 +130,17 @@ public:
 	Self& operator<<(double);
 	
 	Self& operator<<(char const*);
-	Self& operator<<(std::string const& str)
-	{ return *this << str.c_str(); }
+	Self& operator<<(std::string const& str);
+	Self& operator<<(StringView const&);
 
 	Self& operator<<(void const*);
 private:
 	Buffer buffer_;
 
 // static
-static constexpr unsigned kMaxFloatingSize = 324;
+public:
+	static constexpr unsigned kMaxIntSize = 32;
+	static constexpr unsigned kMaxFloatingSize = 324;
 };
 
 template<unsigned SZ>
@@ -159,7 +164,7 @@ namespace detail {
 		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
 	};
 	
-	char const* pzero = digits + 9;
+	extern char const* pzero;
 	
 	template<
 		typename T,
@@ -211,7 +216,7 @@ template<unsigned SZ> \
 auto LexicalStream<SZ>::operator<<(type i)->\
 	Self&\
 {\
-	if(buffer_.avali() > 32)\
+	if(buffer_.avali() > kMaxIntSize)\
 		buffer_.set(detail::int2Str(buffer_.cur(), i)); \
 	return *this; \
 }
@@ -252,6 +257,22 @@ auto LexicalStream<SZ>::operator<<(char const* str)->
 	return *this;
 }
 
+template<unsigned SZ>
+auto LexicalStream<SZ>::operator<<(std::string const& str) ->
+	Self&
+{
+	append(str.data(), str.size());
+	return *this;
+}
+
+template<unsigned SZ>
+auto LexicalStream<SZ>::operator<<(StringView const& sv) ->
+	Self&
+{
+	append(sv.data(), sv.size());
+	return *this;
+}
+
 class Fmt
 {
 public:
@@ -285,10 +306,16 @@ LexicalStream<SZ>& operator<<(LexicalStream<SZ>& stream, Fmt const& fmt)
 	return stream;
 }
 
-//template class LexicalStream<4000>;
-//template class LexicalStream<4000 * 10>;
+constexpr int64_t kSmallStreamSize = 4000;
+constexpr int64_t kLargeStreamSize = 4000 * 1000;
 
-using SmallLexicalStream = LexicalStream<4000>;
+template class LexicalStream<kSmallStreamSize>;
+template class LexicalStream<kLargeStreamSize>;
+
+using SmallLexicalStream = LexicalStream<kSmallStreamSize>;
+using LargeLexicalStream = LexicalStream<kLargeStreamSize>;
+
+extern SmallLexicalStream fsstream;
 
 } // namespace zxy
 
