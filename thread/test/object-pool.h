@@ -45,14 +45,11 @@ public:
 		}
 	}
 
-	bool contains(K const& key)
-	{ return pool_.find(key) != pool_.end(); }
+private:
 	
 	bool contains(iterator const& x)
 	{ return x != pool_.end(); }
 
-	iterator find(K const& key)
-	{ return pool_.find(key); }
 	
 private:
 	// ver1: shared_ptr<T>
