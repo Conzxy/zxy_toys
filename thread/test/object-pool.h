@@ -3,6 +3,7 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
+#include "thread/weak-callback.h"
 
 namespace zxy {
 
@@ -36,7 +37,12 @@ public:
 	void erase(K const& key)
 	{ 
 		MutexGuard guard(mutex_);
-		pool_.erase(key);
+		auto x = pool_.find(key);
+		if(contains(x) && x->second.expired())
+		{
+			pool_.erase(key);
+			printf("erase ok\n");
+		}
 	}
 
 	bool contains(K const& key)
@@ -97,8 +103,12 @@ public:
 
 	~Object()
 	{
-		auto spool = pool_.lock();
-		if(spool) {
+		makeWeakCallback(pool_.lock(), 
+				&ObjectPool<K, Derived>::erase)
+		(key_);
+		//auto spool = pool_.lock();
+
+		//if(spool) {
 			// race condition
 			// ==========================================
 			// thread1          |   thread2
@@ -111,7 +121,6 @@ public:
 			//===========================================
 			// violate semantic: b == c
 			//
-			sleep(1);
 			
 			// race condition
 			// assert(x != end())
@@ -127,13 +136,14 @@ public:
 			//					|   erase
 			//					|   (trigger assertion)
 			//============================================
-			auto x = spool->find(key_);
-			if (spool->contains(x) && 
-					x->second.expired()) {
-				spool->erase(key_);
-				printf("erase ok\n");
-			}
-		}
+			//auto x = spool->find(key_);
+	
+			//if (spool->contains(x) && 
+					//x->second.expired()) {
+				//spool->erase(key_);
+				//printf("erase ok\n");
+			//}
+		//}
 	}
 
 private:
